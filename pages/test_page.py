@@ -1,19 +1,20 @@
 import time
-from PyQt6.QtWidgets import (
-QApplication, QWidget, QLabel, QLineEdit, QComboBox, QSpinBox,
-QRadioButton, QTextEdit, QPushButton, QVBoxLayout, QHBoxLayout, QGroupBox, QButtonGroup
-)
-from PyQt6.QtGui import QPainter, QColor, QPen
-from PyQt6.QtCore import QTimer, QEvent, QObject, pyqtSignal
-from PyQt6.QtGui import QCursor, QTabletEvent
-from models import Data, TabletData, State, ScreenDimensions
-from config import BACKGROUND_COLOR, SOURCE_CIRCLE_COLOR, MIDDLE_CIRCLE_COLOR, DESTINATION_CIRCLE_COLOR, RECT_COLOR
-import sys
-from config import DELAY_BETWEEN_TESTS
-import csv
-from pathlib import Path
 import threading
+import csv
+from queue import Queue
+from pathlib import Path
+from PyQt6.QtCore import QTimer, QObject, pyqtSignal, QEvent
+from PyQt6.QtGui import QCursor, QPainter, QColor, QPen, QTabletEvent
+from PyQt6.QtWidgets import QWidget
+from models import Data, TabletData
+from config import (
+    BACKGROUND_COLOR, SOURCE_CIRCLE_COLOR, DESTINATION_CIRCLE_COLOR, RECT_COLOR,
+    SUCCESS_PATH_COLOR, FAILURE_PATH_COLOR, START_FREQUENCY, START_DURATION_MS,
+    SUCCESS_FREQUENCY, SUCCESS_DURATION_MS, FAILURE_FREQUENCY, FAILURE_DURATION_MS, 
+    DELAY_BETWEEN_TESTS
+)
 import pysine
+
 ######################################################################################
 #                                                                                    #
 #                                Manager Page                                        #
@@ -21,305 +22,274 @@ import pysine
 ######################################################################################
 
 class PageManager(QObject):
-	start_test_signal = pyqtSignal(Data)  # Signal to start a TestPage
-	finished_signal = pyqtSignal()         # Signal to notify all tests are completed
+    """Manages the test progression and navigation between pages."""
+    start_test_signal = pyqtSignal(Data)
+    finished_signal = pyqtSignal()
 
-	def __init__(self, file_path):
-		super().__init__()
-		self.file_path = file_path
-		self.data_generator = self.data_generator_function(self.file_path)
-		self.test_number = 0
+    def __init__(self, file_path: str):
+        super().__init__()
+        self.file_path = file_path
+        self.test_number = 0
+        self.data_generator = self._data_generator_function()
 
+    def _data_generator_function(self):
+        """Generator function to read test data from a CSV file."""
+        from config import INDEX_OF_START_TEST
+        with open(self.file_path, 'r') as file:
+            csv_reader = csv.reader(file)
+            for row in csv_reader:
+                self.test_number += 1
+                if self.test_number < INDEX_OF_START_TEST:
+                    continue
+                yield self._parse_row(row)
 
-	def get_data_from_input_row(self, row):
-		data = [float(x) for x in row]
+    def _parse_row(self, row: list) -> Data:
+        """Parses a row of CSV data into a Data object."""
+        data = [float(x) for x in row]
+        time, rate = int(data[0]), int(data[1])
+        circle_size = 3
 
-		# Read fixed fields
-		time = int(data[0])
-		rate = int(data[1])
+        source_circle = tuple(data[2:2 + circle_size])
+        dest_circle = tuple(data[2 + circle_size:2 + 2 * circle_size])
 
-		circle_size = 3
-		source_circle = tuple(data[2:2+circle_size])
-		dest_circle = tuple(data[2+circle_size:2+2*circle_size])
+        index = 2 + 2 * circle_size
+        num_middle_circles = int(data[index])
+        middle_circles = [
+            tuple(data[i:i + circle_size])
+            for i in range(index + 1, index + 1 + num_middle_circles * circle_size, circle_size)
+        ]
 
-		# Parse middle circles
-		index = 2 + 2 * circle_size
-		num_middle_circles = int(data[index])
-		middle_circles = []
-		index += 1
-		for _ in range(num_middle_circles):
-			middle_circles.append(tuple(data[index:index + circle_size]))
-			index += circle_size
+        index += 1 + num_middle_circles * circle_size
+        num_rectangles = int(data[index])
+        rectangles = [
+            tuple(data[i:i + 6])
+            for i in range(index + 1, index + 1 + num_rectangles * 6, 6)
+        ]
 
-		# Parse rectangles
-		rectangle_size = 6
-		num_rectangles = int(data[index])
-		index += 1
-		rectangles = []
-		for _ in range(num_rectangles):
-			rectangles.append(tuple(data[index:index + rectangle_size]))
-			index += rectangle_size
+        return Data(time, rate, source_circle, dest_circle, middle_circles, rectangles)
 
-		return Data(time, rate, source_circle, dest_circle, middle_circles, rectangles)
+    def start_tests(self):
+        """Starts the test sequence."""
+        self.next_test()
 
-
-	def data_generator_function(self, file_path):
-		# Generator function to read a CSV file row by row
-		from config import INDEX_OF_START_TEST
-		with open(file_path, 'r') as file:
-			csv_reader = csv.reader(file)
-			for row in csv_reader:
-				self.test_number += 1
-				if(self.test_number < INDEX_OF_START_TEST):
-					continue
-				yield self.get_data_from_input_row(row)
-
-
-	def start_tests(self):
-		self.next_test()
-
-	def next_test(self):
-		try:
-			data = next(self.data_generator)
-			self.start_test_signal.emit(data, )  # Emit signal to create a TestPage
-		except StopIteration:
-			self.finished_signal.emit()
+    def next_test(self):
+        try:
+            data = next(self.data_generator)
+            self.start_test_signal.emit(data)
+        except StopIteration:
+            self.finished_signal.emit()
 
 
+def play_beep(frequency: float, duration: float):
+    """Plays a beep sound."""
+    pysine.sine(frequency, duration)
 
-from config import (
-	SUCCESS_PATH_COLOR, FAILURE_PATH_COLOR,
-	START_FREQUENCY, START_DURATION_MS,
-	SUCCESS_FREQUENCY, SUCCESS_DURATION_MS,
-	FAILURE_FREQUENCY, FAILURE_DURATION_MS
-	)
 
-import threading
-import time
-from queue import Queue
+import sched
 
-def play_beep(frequency=440.0, duration=1.0):
-	pysine.sine(frequency, duration)
+scheduler = sched.scheduler(time.perf_counter, time.sleep)
 
 class TestPage(QWidget):
-	def __init__(self, data: Data, target_dir: str, manager=None):
-		super().__init__()
-		self.data = data
-		self.state = self.data.state
-		self.target_dir = target_dir
-		self.manager = manager
-		self.setWindowTitle("Circles Display")
-		# self.setFixedSize(data.dimensions.WINDOW_WIDTH_PIXELS, data.dimensions.WINDOW_HEIGHT_PIXELS)
-		self.setGeometry(0, 0, data.dimensions.WINDOW_WIDTH_PIXELS, data.dimensions.WINDOW_HEIGHT_PIXELS)
-		
-		self.sampling_rate_ms = 5  # Sampling every 1 ms
-	
-		self.read_queue = Queue(maxsize=10000)  # Queue to pass data from read thread to process thread
-		self.reading_thread = threading.Thread(target=self.read_data)
-		self.processing_thread = threading.Thread(target=self.process_data)
-		self.drawing_thread = threading.Thread(target=self.move_rects)
-		self.is_running = False  # Flag to control thread execution
+    """Handles a single test, managing input, drawing, and logic."""
+    def __init__(self, data: Data, target_dir: str, manager: PageManager):
+        super().__init__()
+        self.data = data
+        self.state = self.data.state
+        self.manager = manager
+        self.target_dir = target_dir
+        self.is_running = False
 
-		self.start_time = None
-		self.tablet_connected = False
-		self.path_color = FAILURE_PATH_COLOR
-		self.show_path_flag = False
-		self.table_data = None
-  
-		self.start_beep_thread = threading.Thread(target=play_beep, args=(START_FREQUENCY, START_DURATION_MS))
-		self.success_beep_thread = threading.Thread(target=play_beep, args=(SUCCESS_FREQUENCY, SUCCESS_DURATION_MS))
-		self.failure_beep_thread = threading.Thread(target=play_beep, args=(FAILURE_FREQUENCY, FAILURE_DURATION_MS))
-		
-	def tabletEvent(self, event: QTabletEvent):
-		self.tablet_connected = True
-		x = event.position().x()
-		y = event.position().y()
-		p = event.pressure()
-  
-		self.tablet_data = TabletData(x, y, p)
+        self.sampling_rate_ms = max(1, self.data.rate // 1000)
+        self.read_queue = Queue(maxsize=10000)
+        self.threads = []
 
-		if event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(self.tablet_data.x, self.tablet_data.y) and not self.start_time:
-			self.start_tracking()
+        self.start_time = None
+        self.tablet_data = None
+        self.tablet_connected = False
+        self.path_color = FAILURE_PATH_COLOR
+        self.show_path_flag = False
+
+        self.setGeometry(0, 0, data.dimensions.WINDOW_WIDTH_PIXELS, data.dimensions.WINDOW_HEIGHT_PIXELS)
+        self.setWindowTitle("Circles Display")
+        
+        self.reading_thread = threading.Thread(target=self.read_data)
+        self.processing_thread = threading.Thread(target=self.process_data)
+  
+        self.start_beep_thread = threading.Thread(target=play_beep, args=(START_FREQUENCY, START_DURATION_MS))
+        self.success_beep_thread = threading.Thread(target=play_beep, args=(SUCCESS_FREQUENCY, SUCCESS_DURATION_MS))
+        self.failure_beep_thread = threading.Thread(target=play_beep, args=(FAILURE_FREQUENCY, FAILURE_DURATION_MS))
+        
+    def tabletEvent(self, event: QTabletEvent):
+        """Handles tablet input events."""
+        self.tablet_connected = True
+        self.tablet_data = TabletData(
+            x=event.position().x(),
+            y=event.position().y(),
+            pressure=event.pressure()
+        )
+
+        if event.type() == QEvent.Type.TabletPress and not self.start_time:
+            self.start_tracking()
    
-	def mousePressEvent(self, event):
-		if not self.tablet_connected and not self.start_time:
-			self.start_tracking()
+
+    def mousePressEvent(self, event):
+        """Handles mouse press events."""
+        if not self.tablet_connected and not self.start_time and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
+            self.start_tracking()
 
 
-	def start_tracking(self):
-		self.start_time = time.perf_counter_ns()
-		self.is_running = True
-		self.reading_thread.start()
-		self.processing_thread.start()
-		self.drawing_thread.start()
-		self.start_beep_thread.start()
+    def start_tracking(self):
+        """Starts tracking user input."""
+        self.start_time = time.perf_counter_ns()
+        self.is_running = True
 
-	def read_data(self):
-		"""Samples tablet/mouse positions at precise intervals."""
-		last_sample_time = self.start_time
-		while self.is_running:
-			current_time = time.perf_counter_ns()
-			if current_time - last_sample_time > self.sampling_rate_ms * 1e6:
-				last_sample_time = current_time
-				if self.tablet_connected:
-					x, y, p = self.tablet_data.return_data()
-				else:
-					global_mouse_pos = QCursor.pos()
-					local_mouse_pos = self.mapFromGlobal(global_mouse_pos)
-					x, y, p = local_mouse_pos.x(), local_mouse_pos.y(), None
+        self.reading_thread.start()
+        self.processing_thread.start()
+        self.start_beep_thread.start()
+        
 
-				elapsed_time = time.perf_counter_ns() - self.start_time
-				self.read_queue.put((x, y, p, elapsed_time))
-			# print(elapsed_time / 1e6, x, y, p, sep='\t')
+    def read_data(self):
+        """Reads input data from the mouse or tablet at regular intervals."""
+        last_sample_time = self.start_time
+        while self.is_running:
+            current_time = time.perf_counter_ns()
+            if current_time - last_sample_time > self.sampling_rate_ms * 1e6:
+                last_sample_time = current_time
+                if self.tablet_connected:
+                    x, y, p = self.tablet_data.return_data()
+                else:
+                    pos = self.mapFromGlobal(QCursor.pos())
+                    x, y, p = pos.x(), pos.y(), None
 
-			# time.sleep(1 / 1e9)
-			# Maintain precise timing
-			# time.sleep(max(0, self.sampling_rate_ms / 1000 - (time.perf_counter_ns() - local_start_time) / 1e9))
+                elapsed_time = time.perf_counter_ns() - self.start_time
+                self.read_queue.put((x, y, p, elapsed_time))
 
 
-	def process_data(self):
-		"""Processes sampled positions."""
-		while self.is_running or not self.read_queue.empty():
-			if not self.read_queue.empty():
-				x, y, p, t = self.read_queue.get()
-				self.data.process_new_point(x, y, p, t)
-				# print(t, x, y, p,"Processed!", sep='\t')
+    def process_data(self):
+        """Processes the sampled input data."""
+        while self.is_running:
+            if not self.read_queue.empty():
+                x, y, p, t = self.read_queue.get()
+                self.data.process_new_point(x, y, p, t)
 
-				# check for complition
-				if self.is_running and self.check_end_test(x, y, t):
-					self.start_stop_thread(t)
-			
+                if self.check_end_test(x, y, t):
+                    self.start_stop_thread(t)
+        while not self.read_queue.empty():
+            x, y, p, t = self.read_queue.get()
+            self.data.process_new_point(x, y, p, t)
 
-	def check_end_test(self, x, y, t):
-		dest = self.data.dest_circle
-		dx, dy, drx, dry = dest.x, dest.y, dest.rx, dest.ry
-		if t >= self.data.time_to_finish * 10 ** 6:
-			return 1
-		elif self.data.state.dest_hit:
-			return 1
-		elif x - (dx + drx) >= self.data.passing_offset * self.data.dimensions.X_CM_TO_PIXEL: 
-			return 1
-		return 0
+    def check_end_test(self, x, y, t) -> bool:
+        """Checks if the test should end based on input conditions."""
+        dest = self.data.dest_circle
+        if t >= self.data.time_to_finish * 1e6:
+            return True
+        if self.data.state.dest_hit:
+            return True
+        if x - (dest.x + dest.rx) >= self.data.passing_offset * self.data.dimensions.X_CM_TO_PIXEL: 
+            return True
+        return False
+        
+    def start_stop_thread(self, t):
+        self.is_running = False
+        self.stop_thread = threading.Thread(target=self.stop_tracking, args=(t,))
+        self.stop_thread.start()
+            
 
-	def determin_status(self):
-		status = 1
-		if self.state.time > self.data.time_to_finish * 10 ** 6:
-			status = 0
-		if not self.state.dest_hit:
-			status = 0
-		if sum(self.state.circles_hit) != len(self.state.circles_hit):
-			status = 0
-		if sum(self.state.rects_hit) > 0:
-			status = 0
-		return status
+    def stop_tracking(self, t):
+        print("Tracking stopped!")
+        self.data.state.time = t
+        self.state.success_status = self.determine_status()
 
-	def start_stop_thread(self, t):
-		self.stop_thread = threading.Thread(target=self.stop_tracking, args=(t,))
-		self.stop_thread.start()	
+        if self.reading_thread.is_alive():
+            self.reading_thread.join()  # Wait for reading thread to finish
+        if self.processing_thread.is_alive():
+            self.processing_thread.join() 
 
-	def stop_tracking(self, t):
-		self.is_running = False
-		print("Tracking stopped!")
-		self.data.state.time = t
-		self.state.success_status = self.determin_status()
+        self.path_color = SUCCESS_PATH_COLOR if self.state.success_status else FAILURE_PATH_COLOR
+        if self.state.success_status:
+            self.success_beep_thread.start()
+        else:
+            self.failure_beep_thread.start()
 
-		if self.reading_thread.is_alive():
-			self.reading_thread.join()  # Wait for reading thread to finish
-		if self.processing_thread.is_alive():
-			self.processing_thread.join() 
-		if self.drawing_thread.is_alive():
-			self.drawing_thread.join() 
+        self.show_path_flag = True
+        self.update()
 
-		self.path_color = SUCCESS_PATH_COLOR if self.state.success_status else FAILURE_PATH_COLOR
-		if self.state.success_status:
-			self.success_beep_thread.start()
-		else:
-			self.failure_beep_thread.start()
-
-		self.show_path_flag = True
-		self.update()
-
-		QTimer.singleShot(1500, self.manager.next_test)
+        QTimer.singleShot(DELAY_BETWEEN_TESTS, self.manager.next_test)
   
-		self.save_data()
-  
-	def move_rects(self):
-		
-		# last_sample_time = self.start_time
-		# while self.is_running or self.start_time is None:
-			# current_time = time.perf_counter_ns()
-			# if current_time - last_sample_time >= 1 * 10 ** 6:
-			# 	last_sample_time = current_time
-				
-				# for rect in self.data.rects:
-				# 	rect.update_pos(self.data.dimensions)
-				# self.update()
-				# time.sleep(0.001)
-		pass
+        self.save_data()
 
-	def calc_output_path(self):
-		directory_path = Path(self.target_dir)
-		full_path = directory_path / f'{self.manager.test_number}.csv'
-		return full_path
+    def determine_status(self) -> bool:
+        """Determines the success status of the test."""
+        if self.data.state.time > self.data.time_to_finish * 1e6:
+            return False
+        if not self.data.state.dest_hit:
+            return False
+        if any(not hit for hit in self.data.state.circles_hit):
+            return False
+        if any(self.data.state.rects_hit):
+            return False
+        return True
 
-	def generate_header_and_first_row(self):
-		header = ['x', 'y', 'pressure', 'time', 'total_test_time', 'success', 'time_out', 'source_hit', 'dest_hit']
-		first_row = [*self.state.points[0], self.state.time / 10**6, self.state.success_status, int(self.state.time > self.data.time_to_finish*10**6), self.state.source_hit, self.state.dest_hit, *self.state.circles_hit, *self.state.rects_hit]
-		for i in range(len(self.state.circles_hit)):
-			header += [f'circle_{i+1}_hit']
-		for i in range(len(self.state.rects_hit)):
-			header += [f'rect_{i+1}_hit']
-		return header, first_row
+    def generate_header_and_first_row(self):
+        """Generates the header and first row for the CSV file."""
+        header = ['x', 'y', 'pressure', 'time', 'tota_time', 'success', 'timeout', 'source_hit', 'dest_hit']
+        header += [f"circle_{i + 1}_hit" for i in range(len(self.data.state.circles_hit))]
+        header += [f"rect_{i + 1}_hit" for i in range(len(self.data.state.rects_hit))]
 
-	def save_data(self):
-		file_path = self.calc_output_path()
-	
-		with file_path.open(mode='w', newline='') as csv_file:
-			writer = csv.writer(csv_file)
+        first_row = [
+            *self.data.state.points[0],
+            self.data.state.success_status,
+            int(self.data.state.time > self.data.time_to_finish * 1e6),
+            self.data.state.source_hit,
+            self.data.state.dest_hit,
+            *self.data.state.circles_hit,
+            *self.data.state.rects_hit
+        ]
+        return header, first_row
 
-			# Write the header row
-			header, first_row = self.generate_header_and_first_row()
-			writer.writerow(header)
-			writer.writerow(first_row)
+    def save_data(self):
+        """Saves the test data to a CSV file."""
+        output_path = Path(self.target_dir) / f"{self.manager.test_number}.csv"
+        with output_path.open(mode="w", newline="") as file:
+            writer = csv.writer(file)
+            header, first_row = self.generate_header_and_first_row()
+            writer.writerow(header)
+            writer.writerow(first_row)
+            writer.writerows(self.data.state.points[1:])
+        self.save_diffs()
 
-			# Write the rows from the data list
-			for row in self.state.points[1:]:
-				writer.writerow(row)
-		self.save_diffs()
-
-
-	def calc_output_diff_path(self):
-		directory_path = Path(self.target_dir)
-		full_path = directory_path / f'{self.manager.test_number}_diffs.txt'
-		return full_path
-
-	def save_diffs(self):
-		file_path = self.calc_output_diff_path()
-	
-		with file_path.open(mode='w', newline='') as file:
-			for i in range(1, len(self.state.points)):
-				file.write(f"{self.state.points[i][3] - self.state.points[i-1][3]}\n")
+    def save_diffs(self):
+        output_path = Path(self.target_dir) / f"{self.manager.test_number}_diffs.txt"
+        
+        with output_path.open(mode='w', newline='') as file:
+            for i in range(1, len(self.state.points)):
+                file.write(f"{self.state.points[i][3] - self.state.points[i-1][3]}\n")
 
 
-	def paintEvent(self, event):
-		painter = QPainter(self)
-		painter.fillRect(self.rect(), QColor(*BACKGROUND_COLOR))
+    def paintEvent(self, event):
+        """Handles custom painting of the test elements."""
+        painter = QPainter(self)
+        painter.fillRect(self.rect(), QColor(*BACKGROUND_COLOR))
 
-		self.data.source_circle.draw(painter)
-		self.data.dest_circle.draw(painter)
-		for circle in self.data.middle_circles:
-			circle.draw(painter)
-		for rect in self.data.rects:
-			rect.draw(painter)
+        # Draw source, destination, and middle circles
+        self.data.source_circle.draw(painter)
+        self.data.dest_circle.draw(painter)
+        for circle in self.data.middle_circles:
+            circle.draw(painter)
 
-		if self.show_path_flag:
-			pen = QPen(QColor(*self.path_color), 2)
-			painter.setPen(pen)
-			for i in range(len(self.data.state.points) - 1):
-				painter.drawLine(
-					int(self.data.state.points[i][0]),
-					int(self.data.state.points[i][1]),
-					int(self.data.state.points[i + 1][0]),
-					int(self.data.state.points[i + 1][1]),
-				)
+        # Draw rectangles
+        for rect in self.data.rects:
+            rect.draw(painter)
+
+        # Draw path if the flag is set
+        if self.show_path_flag:
+            pen = QPen(QColor(*self.path_color), 2)
+            painter.setPen(pen)
+            for i in range(len(self.data.state.points) - 1):
+                painter.drawLine(
+                    int(self.data.state.points[i][0]),
+                    int(self.data.state.points[i][1]),
+                    int(self.data.state.points[i + 1][0]),
+                    int(self.data.state.points[i + 1][1]),
+                )
 

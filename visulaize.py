@@ -28,9 +28,9 @@ def plot_numbers_from_file(file_path, output_image_path):
     plt.show()
 
 # Example usage
-for i in range(40, 101):
+for i in range(1, 7):
 	print(i)
-	input_file_path = f'./results/F 100__/{i}_diffs.txt' # Change to your input file
+	input_file_path = f'./results/__/{i}_diffs.txt' # Change to your input file
 	output_image_path = f'numbers_plot_{i}.png'  # Output image file
 
 	plot_numbers_from_file(input_file_path, output_image_path)
