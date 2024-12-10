@@ -1,7 +1,7 @@
 
 # Paths
 INPUT_FILE_PATH = './test_input.csv'
-OUTPUT_DIR = './results/'
+OUTPUT_DIR = './test_results/'
 
 # Test Parameters
 DELAY_BETWEEN_TESTS = 1500             # milisecond

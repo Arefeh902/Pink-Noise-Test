@@ -121,12 +121,18 @@ class TestPage(QWidget):
         
     def tabletEvent(self, event: QTabletEvent):
         """Handles tablet input events."""
+        current_time = time.perf_counter_ns()
         self.tablet_connected = True
         self.tablet_data = TabletData(
             x=event.position().x(),
             y=event.position().y(),
-            pressure=event.pressure()
+            pressure=event.pressure(),
+            x_tilt=event.xTilt(),
+            y_tilt=event.yTilt(),
+            rotation=event.rotation(),
+			time=current_time / 1e6,
         )
+	
 
         if event.type() == QEvent.Type.TabletPress and not self.start_time:
             self.start_tracking()
@@ -156,27 +162,27 @@ class TestPage(QWidget):
             if current_time - last_sample_time > self.sampling_rate_ms * 1e6:
                 last_sample_time = current_time
                 if self.tablet_connected:
-                    x, y, p = self.tablet_data.return_data()
+                    data = self.tablet_data.copy()
                 else:
                     pos = self.mapFromGlobal(QCursor.pos())
-                    x, y, p = pos.x(), pos.y(), None
+                    data = TabletData(pos.x(), pos.y(), None, None, None, None, None)
 
                 elapsed_time = time.perf_counter_ns() - self.start_time
-                self.read_queue.put((x, y, p, elapsed_time))
+                self.read_queue.put((data, elapsed_time))
 
 
     def process_data(self):
         """Processes the sampled input data."""
         while self.is_running:
             if not self.read_queue.empty():
-                x, y, p, t = self.read_queue.get()
-                self.data.process_new_point(x, y, p, t)
+                data, t = self.read_queue.get()
+                self.data.process_input_data(data, t)
 
-                if self.check_end_test(x, y, t):
+                if self.check_end_test(data.x, data.y, t):
                     self.start_stop_thread(t)
         while not self.read_queue.empty():
-            x, y, p, t = self.read_queue.get()
-            self.data.process_new_point(x, y, p, t)
+            data, t = self.read_queue.get()
+            self.data.process_input_data(data, t)
 
     def check_end_test(self, x, y, t) -> bool:
         """Checks if the test should end based on input conditions."""
@@ -232,7 +238,7 @@ class TestPage(QWidget):
 
     def generate_header_and_first_row(self):
         """Generates the header and first row for the CSV file."""
-        header = ['x', 'y', 'pressure', 'time', 'tota_time', 'success', 'timeout', 'source_hit', 'dest_hit']
+        header = ['x', 'y', 'pressure', 'x_tilt', 'y_tilt', 'rotation', 'tablet_time', 'time', 'tota_time', 'success', 'timeout', 'source_hit', 'dest_hit']
         header += [f"circle_{i + 1}_hit" for i in range(len(self.data.state.circles_hit))]
         header += [f"rect_{i + 1}_hit" for i in range(len(self.data.state.rects_hit))]
 
@@ -263,7 +269,7 @@ class TestPage(QWidget):
         
         with output_path.open(mode='w', newline='') as file:
             for i in range(1, len(self.state.points)):
-                file.write(f"{self.state.points[i][3] - self.state.points[i-1][3]}\n")
+                file.write(f"{self.state.points[i][-1] - self.state.points[i-1][-1]}\n")
 
 
     def paintEvent(self, event):
