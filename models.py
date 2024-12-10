@@ -61,18 +61,18 @@ class Data:
 
         self.state = State(self)
     
+    def process_x_and_y(self, x, y):
+        y = self.dimensions.WINDOW_HEIGHT_PIXELS // 2 - y
+        return x, y
 
     def process_input_circle_data(self, circle, color):
         x, y, r = circle
         x *= self.dimensions.X_CM_TO_PIXEL
         y *= self.dimensions.Y_CM_TO_PIXEL
-        # y = self.dimensions.WINDOW_HEIGHT_PIXELS - (y + self.dimensions.WINDOW_HEIGHT_PIXELS / 2)  
+        # y = self.dimensions.WINDOW_HEIGHT_PIXELS - (y + self.dimensions.WINDOW_HEIGHT_PIXELS / 2) 
+        x, y = self.process_x_and_y(x, y)
         rx = r * self.dimensions.X_CM_TO_PIXEL
         ry = r * self.dimensions.Y_CM_TO_PIXEL
-        x = int(x)
-        y = int(y)
-        rx = int(rx)
-        ry = int(ry)
         return Circle(x, y, rx, ry, color)
 
 
@@ -80,6 +80,7 @@ class Data:
         x, y, w, h, dx, dy = rect
         x *= self.dimensions.X_CM_TO_PIXEL
         y *= self.dimensions.Y_CM_TO_PIXEL
+        x, y = self.process_x_and_y(x, y)
         w *= self.dimensions.X_CM_TO_PIXEL
         h *= self.dimensions.Y_CM_TO_PIXEL
         dx *= self.dimensions.X_CM_TO_PIXEL
