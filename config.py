@@ -4,7 +4,7 @@ INPUT_FILE_PATH = './test_input.csv'
 OUTPUT_DIR = './test_results/'
 
 # Test Parameters
-DELAY_BETWEEN_TESTS = 1500             # milisecond
+DELAY_BETWEEN_TESTS = 1500             # ms
 INDEX_OF_START_TEST = 0                # Test to start from
 OFFSET_FROM_DEST_CM = 1
 

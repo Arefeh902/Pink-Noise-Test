@@ -13,6 +13,8 @@ from config import (
     SUCCESS_FREQUENCY, SUCCESS_DURATION_MS, FAILURE_FREQUENCY, FAILURE_DURATION_MS, 
     DELAY_BETWEEN_TESTS
 )
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
+from PyQt6.QtCore import Qt
 import pysine
 
 ######################################################################################
@@ -84,11 +86,6 @@ def play_beep(frequency: float, duration: float):
     """Plays a beep sound."""
     pysine.sine(frequency, duration)
 
-
-import sched
-
-scheduler = sched.scheduler(time.perf_counter, time.sleep)
-
 class TestPage(QWidget):
     """Handles a single test, managing input, drawing, and logic."""
     def __init__(self, data: Data, target_dir: str, manager: PageManager):
@@ -112,12 +109,32 @@ class TestPage(QWidget):
         self.setGeometry(0, 0, data.dimensions.WINDOW_WIDTH_PIXELS, data.dimensions.WINDOW_HEIGHT_PIXELS)
         self.setWindowTitle("Circles Display")
         
+        self.init_ui()
+        
         self.reading_thread = threading.Thread(target=self.read_data)
         self.processing_thread = threading.Thread(target=self.process_data)
   
         self.start_beep_thread = threading.Thread(target=play_beep, args=(START_FREQUENCY, START_DURATION_MS))
         self.success_beep_thread = threading.Thread(target=play_beep, args=(SUCCESS_FREQUENCY, SUCCESS_DURATION_MS))
         self.failure_beep_thread = threading.Thread(target=play_beep, args=(FAILURE_FREQUENCY, FAILURE_DURATION_MS))
+    
+    def init_ui(self):
+        layout = QVBoxLayout()
+        layout.addStretch()
+
+        # Create a QLabel for the test number at the bottom
+        self.test_number_label = QLabel(f"Test Number: {self.manager.test_number}")
+        self.test_number_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Style the label to make it small and subtle
+        self.test_number_label.setStyleSheet("""
+            font-size: 20px;
+            color: #555555;
+            padding: 5px;
+        """)
+
+        layout.addWidget(self.test_number_label, alignment=Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
+        self.setLayout(layout)
         
     def tabletEvent(self, event: QTabletEvent):
         """Handles tablet input events."""
