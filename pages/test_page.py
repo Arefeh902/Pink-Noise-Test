@@ -106,6 +106,7 @@ class TestPage(QWidget):
         self.target_dir = target_dir
         self.is_running = False
 
+        # self.sampling_rate_ms = 5
         self.sampling_rate_ms = max(1, self.data.rate // 1000)
         self.read_queue = Queue(maxsize=10000)
         self.threads = []
@@ -150,6 +151,7 @@ class TestPage(QWidget):
         """Handles tablet input events."""
         current_time = time.perf_counter_ns()
         self.tablet_connected = True
+        starting_time = self.start_time if self.start_time else current_time
         self.tablet_data = TabletData(
             x=event.position().x(),
             y=event.position().y(),
@@ -157,8 +159,11 @@ class TestPage(QWidget):
             x_tilt=event.xTilt(),
             y_tilt=event.yTilt(),
             rotation=event.rotation(),
-			time=current_time / 1e6,
+			time=(current_time - starting_time)/ 1e6,
         )
+		
+        elapsed_time = time.perf_counter_ns() - starting_time
+        self.read_queue.put((self.tablet_data, elapsed_time))
 	
 
         if event.type() == QEvent.Type.TabletPress and not self.start_time and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
@@ -176,7 +181,7 @@ class TestPage(QWidget):
         self.start_time = time.perf_counter_ns()
         self.is_running = True
 
-        self.reading_thread.start()
+        # self.reading_thread.start()
         self.processing_thread.start()
         self.start_beep_thread.start()
         
