@@ -15,7 +15,8 @@ from config import (
 )
 from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 from PyQt6.QtCore import Qt
-import pysine
+import sounddevice as sd
+import numpy as np
 
 ######################################################################################
 #                                                                                    #
@@ -82,15 +83,24 @@ class PageManager(QObject):
             self.finished_signal.emit()
 
 
+
 def play_beep(frequency: float, duration: float):
-    """Plays a beep sound."""
-    pysine.sine(frequency, duration)
+	# Generate a sine wave
+	sample_rate = 44100  # Samples per second (standard for audio)
+	t = np.linspace(0, duration, int(sample_rate * duration), False)
+	audio = np.sin(2 * np.pi * frequency * t)
+
+	# Play the audio
+	sd.play(audio, samplerate=sample_rate)
+	sd.wait()
 
 class TestPage(QWidget):
     """Handles a single test, managing input, drawing, and logic."""
     def __init__(self, data: Data, target_dir: str, manager: PageManager):
         super().__init__()
         self.data = data
+        self.data.dimensions.WINDOW_HEIGHT_PIXELS -= 250
+        self.data.dimensions.WINDOW_WIDTH_PIXELS -= 250
         self.state = self.data.state
         self.manager = manager
         self.target_dir = target_dir
@@ -151,7 +161,7 @@ class TestPage(QWidget):
         )
 	
 
-        if event.type() == QEvent.Type.TabletPress and not self.start_time:
+        if event.type() == QEvent.Type.TabletPress and not self.start_time and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
             self.start_tracking()
    
 

@@ -97,12 +97,7 @@ class Data:
         self.state.dest_hit |= self.dest_circle.check_hit(x, y)
         
         for i in range(len(self.middle_circles)):
-            old = self.state.circles_hit[i] 
             self.state.circles_hit[i] |= self.middle_circles[i].check_hit(x, y)
-            # if old != self.state.circles_hit[i]:
-            # 	print('='*30)
-            # 	print(x, y)
-            # 	print(self.middle_circles[i])
 
         for i in range(len(self.rects)):
             rx, ry, rw, rh = self.rects[i].x, self.rects[i].y, self.rects[i].w, self.rects[i].h
