@@ -89,8 +89,8 @@ class Data:
 
 
     def process_input_data(self, tablet_data, t):
-        x, y = tablet_data.x, tablet_data.y
-        self.state.points.append((*tablet_data.return_data(), t / 10 ** 6))
+        x, y = tablet_data[0], tablet_data[1]
+        self.state.points.append((*tablet_data, t / 10 ** 6))
 
         # check collusions
         self.state.source_hit |= self.source_circle.check_hit(x, y)
