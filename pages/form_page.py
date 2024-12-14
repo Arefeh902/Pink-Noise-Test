@@ -1,27 +1,24 @@
 from PyQt6.QtWidgets import (
-QApplication, QWidget, QLabel, QLineEdit, QComboBox, QSpinBox,
-QRadioButton, QTextEdit, QPushButton, QVBoxLayout, QHBoxLayout, QGroupBox, QButtonGroup
+	QApplication, QWidget, QLabel, QLineEdit, QComboBox, QSpinBox,
+	QRadioButton, QTextEdit, QPushButton, QVBoxLayout, QHBoxLayout, QGroupBox, QButtonGroup, QSpacerItem, QSizePolicy
 )
-from .test_page import PageManager
+from PyQt6.QtCore import pyqtSignal
+from config import FORM_OPTIONS_TYPES
 
 ######################################################################################
 #                                                                                    #
 #                                   FORM Page                                        #
 #                                                                                    #
 ######################################################################################
-from PyQt6.QtWidgets import (
-	QApplication, QWidget, QLabel, QLineEdit, QComboBox, QSpinBox,
-	QRadioButton, QTextEdit, QPushButton, QVBoxLayout, QHBoxLayout, QGroupBox, QButtonGroup, QSpacerItem, QSizePolicy
-)
-from .test_page import PageManager
 
 class FormPage(QWidget):
-	def __init__(self, main_window, test_manager: PageManager):
+	form_submitted = pyqtSignal()
+
+	def __init__(self, main_window):
 		super().__init__()
 		self.main_window = main_window
 		self.dimensions = main_window.dimensions
 		self.dimensions.WINDOW_HEIGHT_PIXELS -= 100
-		self.test_manager = test_manager
 		self.setWindowTitle("Form Page")
 		self.setFixedSize(self.dimensions.WINDOW_WIDTH_PIXELS, self.dimensions.WINDOW_HEIGHT_PIXELS)
 		# self.setGeometry(0, 0, self.dimensions.WINDOW_WIDTH_PIXELS, self.dimensions.WINDOW_HEIGHT_PIXELS)
@@ -49,8 +46,8 @@ class FormPage(QWidget):
 
 		self.test_type_label = QLabel("Test Type:")
 		self.test_type_combo = QComboBox()
-		self.test_type_combo.addItems(["Test A", "Test B", "Test C"])  # Example test types
-
+		self.test_type_combo.addItems(FORM_OPTIONS_TYPES) 
+  
 		self.extra_info_label = QLabel("Additional Information (Optional):")
 		self.extra_info_input = QTextEdit()
 
@@ -100,21 +97,22 @@ class FormPage(QWidget):
 		self.layout.addWidget(self.submit_button)
 
 		self.setLayout(self.layout)
-	def submit_form(self):
-		# Here you can handle form submission
-		name = self.name_input.text()
-		last_name = self.last_name_input.text()
-		phone = self.phone_input.text()
-		age = self.age_input.value()
-		dominant_hand = "چپ" if self.left_hand_radio.isChecked() else "راست"
-		vision_type = self.vision_type_combo.currentText()
-		test_type = self.test_type_combo.currentText()
-		extra_info = self.extra_info_text.toPlainText()
 
-		print(f"Form Submitted:\nName: {name}\nLast Name: {last_name}\nPhone: {phone}\nAge: {age}\nDominant Hand: {dominant_hand}")
-		print(f"Vision: {vision_type}\nTest Type: {test_type}\nExtra Info: {extra_info}")
+	# def submit_form(self):
+	# 	# Here you can handle form submission
+	# 	name = self.name_input.text()
+	# 	last_name = self.last_name_input.text()
+	# 	phone = self.phone_input.text()
+	# 	age = self.age_input.value()
+	# 	dominant_hand = "Left" if self.left_hand_radio.isChecked() else "Rigth"
+	# 	vision_type = self.vision_type_combo.currentText()
+	# 	test_type = self.test_type_combo.currentText()
+	# 	extra_info = self.extra_info_text.toPlainText()
 
-		# You can now do something with this data, such as saving or sending it
+	# 	print(f"Form Submitted:\nName: {name}\nLast Name: {last_name}\nPhone: {phone}\nAge: {age}\nDominant Hand: {dominant_hand}")
+	# 	print(f"Vision: {vision_type}\nTest Type: {test_type}\nExtra Info: {extra_info}")
+
+	# 	# You can now do something with this data, such as saving or sending it
 
 
 	def submit_form(self):
@@ -141,8 +139,6 @@ class FormPage(QWidget):
 			print(f"Base directory '{target_dir}' does not exist. Creating it...")
 			target_dir.mkdir(parents=True)
 
-
-
 		self.main_window.target_dir = str(target_dir)
 
 		# create base info file
@@ -165,10 +161,6 @@ class FormPage(QWidget):
 		with open(file_path, "w") as file:
 			file.write("\n".join(lines))
 
-		# # Write the form data to the file
-		# with file_path.open("w") as file:
-		# 	for key, value in form_data.items():
-		# 		file.write(f"{key}: {value}\n")
-
 		# call the function for reading input files and stuff!
-		self.test_manager.start_tests()
+		self.main_window.input_dir = f'data/{test_type}'
+		self.form_submitted.emit()

@@ -63,13 +63,13 @@ class Data:
     
     def process_x_and_y(self, x, y):
         y = self.dimensions.WINDOW_HEIGHT_PIXELS // 2 - y
+        x = self.dimensions.WINDOW_WIDTH_PIXELS // 2 + x
         return x, y
 
     def process_input_circle_data(self, circle, color):
         x, y, r = circle
         x *= self.dimensions.X_CM_TO_PIXEL
         y *= self.dimensions.Y_CM_TO_PIXEL
-        # y = self.dimensions.WINDOW_HEIGHT_PIXELS - (y + self.dimensions.WINDOW_HEIGHT_PIXELS / 2) 
         x, y = self.process_x_and_y(x, y)
         rx = r * self.dimensions.X_CM_TO_PIXEL
         ry = r * self.dimensions.Y_CM_TO_PIXEL

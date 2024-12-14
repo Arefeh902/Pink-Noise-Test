@@ -2,11 +2,17 @@
 # Paths
 INPUT_FILE_PATH = './test_input.csv'
 OUTPUT_DIR = './test_results/'
+INPUT_DATA_FILE_NAME = "data.xlsx"
+INPUT_CIRCLES_FILE_NAME = "circles.xlsx"
+INPUT_RECTS_FILE_NAME = "rects.xlsx"
 
 # Test Parameters
 DELAY_BETWEEN_TESTS = 1500             # ms
 INDEX_OF_START_TEST = 0                # Test to start from
 OFFSET_FROM_DEST_CM = 1
+
+# Form Params
+FORM_OPTIONS_TYPES = ['P', 'PR', 'W', 'WR', 'C']
 
 # Visual Parameters
 SOURCE_CIRCLE_COLOR      = (120, 245, 66)       

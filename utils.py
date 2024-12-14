@@ -1,0 +1,82 @@
+import os
+import pandas as pd
+from config import INPUT_DATA_FILE_NAME, INPUT_CIRCLES_FILE_NAME, INPUT_RECTS_FILE_NAME
+
+def create_input_file_from_excel(directory: str, output_file: str):
+    """
+    Combines general test data, circles, and rectangles data from Excel files into a single input CSV file.
+
+    Args:
+        directory (str): Path to the directory containing the Excel files.
+        output_file (str): Path to the output file to be generated (CSV format).
+    """
+    general_test_data_path = os.path.join(directory, INPUT_DATA_FILE_NAME)
+    circles_path = os.path.join(directory, INPUT_CIRCLES_FILE_NAME)
+    rects_path = os.path.join(directory, INPUT_RECTS_FILE_NAME)
+        
+    # Check if required files exist
+    if not all(os.path.exists(path) for path in [general_test_data_path, circles_path, rects_path]):
+        raise FileNotFoundError("One or more required Excel files (general_test_data.xlsx, circles.xlsx, rects.xlsx) are missing.")
+
+    # Read Excel files into DataFrames
+    general_test_data = pd.read_excel(general_test_data_path, header=None)
+    circles = pd.read_excel(circles_path, header=None)
+    rects = pd.read_excel(rects_path, header=None)
+
+    # Prepare the output DataFrame
+    output_data = []
+    
+    circle_data_size = 3
+    rect_data_size = 4
+    max_rectangles = 4
+
+    for gen_row, circle_row, rect_row in zip(
+        general_test_data.itertuples(index=False), 
+        circles.itertuples(index=False), 
+        rects.itertuples(index=False)
+    ):
+            
+        # Extract middle circles
+        middle_circles = list(circle_row)  # Remaining fields for middle circles
+        num_middle_circles = len(middle_circles) // circle_data_size  # Each circle has 3 fields
+        for i in range(0, num_middle_circles, circle_data_size):
+            if middle_circles[i+2] == 0:
+                num_middle_circles -= 1
+                middle_circles = middle_circles[:i] + middle_circles[i+circle_data_size:]
+        
+        # Extract rectangles
+        rectangles = list(rect_row)  # All fields in `rects.xlsx` are rectangles
+        num_rectangles = len(rectangles) // rect_data_size  # Each rectangle has 6 fields
+        for i in range(0, num_rectangles, rect_data_size):
+            zeros = 0
+            for j in range(rect_data_size):
+                if rectangles[i+j] == 0:
+                    zeros += 1
+            if zeros == rect_data_size:
+                num_rectangles -= 1
+                rectangles = rectangles[:i] + rectangles[i+rect_data_size:]
+            
+        # Combine all data into a single row
+        combined_row = [
+            *gen_row,
+            num_middle_circles, *middle_circles,
+            num_rectangles, *rectangles
+        ]
+        output_data.append(combined_row)
+
+    # Define the output DataFrame structure
+    columns = (
+        [f"middle_circle_{i}_{attr}" for i in range(1, num_middle_circles + 1) for attr in ["x", "y", "radius"]]
+        + ["num_rectangles"]
+        + [f"rect_{i}_{attr}" for i in range(1, max_rectangles + 1) for attr in ["x", "y", "width", "height"]]
+    )
+
+    # Save the output DataFrame to a CSV file
+    output_df = pd.DataFrame(output_data, columns=columns[:len(output_data[0])])  # Adjust for column size
+    output_df.to_csv(output_file, index=False, header=None)
+
+    print(f"Input file created at: {output_file}")
+
+
+# Example usage
+# create_input_file_from_excel("./data/", "input_file.csv")
