@@ -1,0 +1,6 @@
+.venv/
+
+restuls/
+test_results/
+
+__pycache__
