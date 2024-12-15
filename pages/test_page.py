@@ -149,7 +149,11 @@ class TestPage(QWidget):
 		
 	def tabletEvent(self, event: QTabletEvent):
 		"""Handles tablet input events."""
-		current_time = time.perf_counter_ns()
+		threading.Thread(target=self.tablet_, args=(event, time.perf_counter_ns())).start()
+		
+
+	def tablet_(self, event, current_time):
+		self.tablet_connected = True
 		if not self.start_time and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
 			# self.start_tracking()		
 			self.start_time = time.perf_counter_ns()
@@ -162,26 +166,20 @@ class TestPage(QWidget):
 		if self.is_running:
 			# print(time.perf_counter_ns() / 1e6)
 			self.tablet_data_times.append((current_time - self.start_time) / 1e6)
-			tablet_thread = threading.Thread(target=self.tablet_, args=(event, current_time))
-			tablet_thread.start()
-
-
-	def tablet_(self, event, current_time):
-		self.tablet_connected = True
-		starting_time = self.start_time if self.start_time else current_time
-		self.tablet_data = [
-			event.position().x(),
-			event.position().y(),
-			event.pressure(),
-			event.xTilt(),
-			event.yTilt(),
-			event.rotation(),
-			(current_time - starting_time)/ 1e6
-		]
-		
-		# elapsed_time = time.perf_counter_ns() - starting_time
-		elapsed_time = current_time - starting_time
-		self.read_queue.put((self.tablet_data, elapsed_time))
+			starting_time = self.start_time if self.start_time else current_time
+			self.tablet_data = [
+				event.position().x(),
+				event.position().y(),
+				event.pressure(),
+				event.xTilt(),
+				event.yTilt(),
+				event.rotation(),
+				(current_time - starting_time)/ 1e6
+			]
+			
+			# elapsed_time = time.perf_counter_ns() - starting_time
+			elapsed_time = current_time - starting_time
+			self.read_queue.put((self.tablet_data, elapsed_time))
 	
    
 

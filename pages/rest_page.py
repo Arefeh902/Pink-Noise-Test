@@ -2,9 +2,11 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout,
 
 
 class RestPage(QWidget):
-    def __init__(self, navigate_to_new_page):
+    def __init__(self, main_window):
         super().__init__()
 
+        self.main_window = main_window
+        
         # Create layout
         layout = QVBoxLayout()
 

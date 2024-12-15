@@ -12,7 +12,7 @@ INDEX_OF_START_TEST = 0                # Test to start from
 OFFSET_FROM_DEST_CM = 1
 
 # Form Params
-FORM_OPTIONS_TYPES = ['P', 'PR', 'W', 'WR', 'C']
+FORM_OPTIONS_TYPES = ['C', 'P','PR', 'W', 'WR']
 
 # Visual Parameters
 SOURCE_CIRCLE_COLOR      = (120, 245, 66)       
