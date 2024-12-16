@@ -111,7 +111,7 @@ class TestPage(QWidget):
 		self.read_queue = Queue(maxsize=10000)
 		self.tablet_data_times = []
 
-		self.start_time = None
+		self.start_time = 0
 		self.tablet_data = None
 		self.tablet_connected = False
 		self.path_color = FAILURE_PATH_COLOR
@@ -149,17 +149,25 @@ class TestPage(QWidget):
 		
 	def tabletEvent(self, event: QTabletEvent):
 		"""Handles tablet input events."""
-		threading.Thread(target=self.tablet_, args=(event, time.perf_counter_ns())).start()
+		# threading.Thread(target=self.tablet_, args=(event, time.perf_counter_ns())).start()
+		current_time = time.perf_counter_ns()
+		if self.start_time != 0 and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
+			self.start_tracking()
+			
+		self.tablet_data = [
+			event.position().x(),
+			event.position().y(),
+			event.pressure(),
+			event.xTilt(),
+			event.yTilt(),
+			event.rotation(),
+			(current_time - self.start_time)/ 1e6
+		]
 		
 
 	def tablet_(self, event, current_time):
-		if not self.start_time and not self.start_time and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
-			self.start_time = time.perf_counter_ns()
-			self.is_running = True
-
-			self.reading_thread.start()
-			self.processing_thread.start()
-			self.start_beep_thread.start()
+		if self.start_time != 0 and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
+			self.start_tracking()
 
 		self.tablet_data = [
 			event.position().x(),
@@ -168,16 +176,16 @@ class TestPage(QWidget):
 			event.xTilt(),
 			event.yTilt(),
 			event.rotation(),
-			(current_time - starting_time)/ 1e6
+			(current_time - self.start_time)/ 1e6
 		]
 		
 		# self.read_queue.put(self.tablet_data)
 	   
 
-	# def mousePressEvent(self, event):
-	# 	"""Handles mouse press events."""
-	# 	if not self.tablet_connected and not self.start_time and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
-	# 		self.start_tracking()
+	def mousePressEvent(self, event):
+		"""Handles mouse press events."""
+		if self.start_time != 0 and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
+			self.start_tracking()
 
 
 	def start_tracking(self):
@@ -185,7 +193,7 @@ class TestPage(QWidget):
 		self.start_time = time.perf_counter_ns()
 		self.is_running = True
 
-		# self.reading_thread.start()
+		self.reading_thread.start()
 		self.processing_thread.start()
 		self.start_beep_thread.start()
 		
