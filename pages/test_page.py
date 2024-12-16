@@ -153,40 +153,31 @@ class TestPage(QWidget):
 		
 
 	def tablet_(self, event, current_time):
-		self.tablet_connected = True
-		if not self.start_time and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
-			# self.start_tracking()		
+		if not self.start_time and not self.start_time and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
 			self.start_time = time.perf_counter_ns()
 			self.is_running = True
 
-			# self.reading_thread.start()
+			self.reading_thread.start()
 			self.processing_thread.start()
 			self.start_beep_thread.start()
 
-		if self.is_running:
-			# print(time.perf_counter_ns() / 1e6)
-			self.tablet_data_times.append((current_time - self.start_time) / 1e6)
-			starting_time = self.start_time if self.start_time else current_time
-			self.tablet_data = [
-				event.position().x(),
-				event.position().y(),
-				event.pressure(),
-				event.xTilt(),
-				event.yTilt(),
-				event.rotation(),
-				(current_time - starting_time)/ 1e6
-			]
-			
-			# elapsed_time = time.perf_counter_ns() - starting_time
-			elapsed_time = current_time - starting_time
-			self.read_queue.put((self.tablet_data, elapsed_time))
-	
-   
+		self.tablet_data = [
+			event.position().x(),
+			event.position().y(),
+			event.pressure(),
+			event.xTilt(),
+			event.yTilt(),
+			event.rotation(),
+			(current_time - starting_time)/ 1e6
+		]
+		
+		# self.read_queue.put(self.tablet_data)
+	   
 
-	def mousePressEvent(self, event):
-		"""Handles mouse press events."""
-		if not self.tablet_connected and not self.start_time and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
-			self.start_tracking()
+	# def mousePressEvent(self, event):
+	# 	"""Handles mouse press events."""
+	# 	if not self.tablet_connected and not self.start_time and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
+	# 		self.start_tracking()
 
 
 	def start_tracking(self):
@@ -290,6 +281,7 @@ class TestPage(QWidget):
 
 		first_row = [
 			*self.data.state.points[0],
+			self.data.state.time,
 			self.data.state.success_status,
 			int(self.data.state.time > self.data.time_to_finish * 1e6),
 			self.data.state.source_hit,
