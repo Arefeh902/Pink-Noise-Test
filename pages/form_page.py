@@ -133,7 +133,7 @@ class FormPage(QWidget):
 		base_path = Path(OUTPUT_DIR)
 		# Construct the target directory name based on form input
 		target_name = f"{name}_{last_name}_{phone_number}"  
-		target_dir = base_path / target_name
+		target_dir = base_path / target_name / test_type
 
 		if not target_dir.exists():
 			print(f"Base directory '{target_dir}' does not exist. Creating it...")
