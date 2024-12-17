@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
 
 	def show_test_page(self, data: Data) -> None:
 		"""Display the test page with the given data."""
-		test_page = TestPage(data, self.target_dir, os.path.basename(self.folders[self.folder_index]), self.manager)
+		test_page = TestPage(data, self.target_dir, os.path.basename(self.folders[self.folder_index - 1]), self.manager)
 		self.set_central_widget(test_page)
 
 	def on_tests_complete(self) -> None:
