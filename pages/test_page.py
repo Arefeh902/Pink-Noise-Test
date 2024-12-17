@@ -151,7 +151,7 @@ class TestPage(QWidget):
 		"""Handles tablet input events."""
 		# threading.Thread(target=self.tablet_, args=(event, time.perf_counter_ns())).start()
 		current_time = time.perf_counter_ns()
-		if self.start_time != 0 and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
+		if not self.start_time and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
 			self.start_tracking()
 			
 		self.tablet_data = [
@@ -166,7 +166,7 @@ class TestPage(QWidget):
 		
 
 	def tablet_(self, event, current_time):
-		if self.start_time != 0 and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
+		if not self.start_time and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
 			self.start_tracking()
 
 		self.tablet_data = [
@@ -184,7 +184,7 @@ class TestPage(QWidget):
 
 	def mousePressEvent(self, event):
 		"""Handles mouse press events."""
-		if self.start_time != 0 and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
+		if not self.start_time and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
 			self.start_tracking()
 
 
@@ -211,7 +211,7 @@ class TestPage(QWidget):
 					pos = self.mapFromGlobal(QCursor.pos())
 					data = [pos.x(), pos.y(), None, None, None, None, None]
 
-				elapsed_time = time.perf_counter_ns() - self.start_time
+				elapsed_time = (current_time - self.start_time) / 1e6
 				self.read_queue.put((data, elapsed_time))
 
 
