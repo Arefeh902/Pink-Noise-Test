@@ -69,8 +69,15 @@ class Data:
     def process_x_and_y_for_record(self, x, y):
         y = self.dimensions.WINDOW_HEIGHT_PIXELS // 2 - y 
         x = x - self.dimensions.WINDOW_WIDTH_PIXELS // 2 
-        # x *= self.dimensions.X_PIXEL_TO_CM
-        # y *= self.dimensions.Y_PIXEL_TO_CM
+        x *= self.dimensions.X_PIXEL_TO_CM * 10
+        y *= self.dimensions.Y_PIXEL_TO_CM * 10
+        return x, y
+
+    def reverse_process_x_and_y_for_drawing(self, x, y):
+        x *= self.dimensions.X_CM_TO_PIXEL / 10
+        y *= self.dimensions.Y_CM_TO_PIXEL / 10
+        y = self.dimensions.WINDOW_HEIGHT_PIXELS // 2 - y
+        x = self.dimensions.WINDOW_WIDTH_PIXELS // 2 + x
         return x, y
 
     def process_input_circle_data(self, circle, color):

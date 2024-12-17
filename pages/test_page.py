@@ -344,10 +344,16 @@ class TestPage(QWidget):
 			pen = QPen(QColor(*self.path_color), 2)
 			painter.setPen(pen)
 			for i in range(len(self.data.state.points) - 1):
+				x1, y1 = self.data.state.points[i][:2]
+				x1, y1 = self.data.reverse_process_x_and_y_for_drawing(x1, y1) 
+				x2, y2 = self.data.state.points[i+1][:2]
+				x2, y2 = self.data.reverse_process_x_and_y_for_drawing(x2, y2) 
 				painter.drawLine(
-					int(self.data.state.points[i][0]),
-					int(self.data.state.points[i][1]),
-					int(self.data.state.points[i + 1][0]),
-					int(self.data.state.points[i + 1][1]),
+					int(x1), int(y1),
+					int(x2), int(y2)
+					# int(self.data.state.points[i][0]),
+					# int(self.data.state.points[i][1]),
+					# int(self.data.state.points[i + 1][0]),
+					# int(self.data.state.points[i + 1][1]),
 				)
 
