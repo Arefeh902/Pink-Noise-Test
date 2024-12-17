@@ -66,6 +66,13 @@ class Data:
         x = self.dimensions.WINDOW_WIDTH_PIXELS // 2 + x
         return x, y
 
+    def process_x_and_y_for_record(self, x, y):
+        y = self.dimensions.WINDOW_HEIGHT_PIXELS // 2 - y 
+        x = x - self.dimensions.WINDOW_WIDTH_PIXELS // 2 
+        # x *= self.dimensions.X_PIXEL_TO_CM
+        # y *= self.dimensions.Y_PIXEL_TO_CM
+        return x, y
+
     def process_input_circle_data(self, circle, color):
         x, y, r = circle
         x *= self.dimensions.X_CM_TO_PIXEL
@@ -90,7 +97,6 @@ class Data:
 
     def process_input_data(self, tablet_data, t):
         x, y = tablet_data[0], tablet_data[1]
-        self.state.points.append((*tablet_data, t))
 
         # check collusions
         self.state.source_hit |= self.source_circle.check_hit(x, y)
@@ -103,6 +109,9 @@ class Data:
             rx, ry, rw, rh = self.rects[i].x, self.rects[i].y, self.rects[i].w, self.rects[i].h
             if x <= rx+rw and x >= rx and y <= ry+rh and y >= ry:
                 self.state.rects_hit[i] = 1 
+
+        tablet_data[0], tablet_data[1] = self.process_x_and_y_for_record(x, y)
+        self.state.points.append((*tablet_data, t))
 
 
 class State: 

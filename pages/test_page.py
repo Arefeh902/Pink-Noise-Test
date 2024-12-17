@@ -319,9 +319,9 @@ class TestPage(QWidget):
 			for i in range(1, len(self.state.points)):
 				file.write(f"{self.state.points[i][-1] - self.state.points[i-1][-1]}\n")
 		
-		with output_time_path.open(mode='w', newline='') as file:
-			for i in range(len(self.tablet_data_times)):
-				file.write(f"{self.tablet_data_times[i]}\n")
+		# with output_time_path.open(mode='w', newline='') as file:
+		# 	for i in range(len(self.tablet_data_times)):
+		# 		file.write(f"{self.tablet_data_times[i]}\n")
 
 
 	def paintEvent(self, event):
