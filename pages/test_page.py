@@ -232,7 +232,7 @@ class TestPage(QWidget):
 	def check_end_test(self, x, y, t) -> bool:
 		"""Checks if the test should end based on input conditions."""
 		dest = self.data.dest_circle
-		if t >= self.data.time_to_finish * 1e6:
+		if t >= self.data.time_to_finish:
 			return True
 		if self.data.state.dest_hit:
 			return True
@@ -271,7 +271,7 @@ class TestPage(QWidget):
 
 	def determine_status(self) -> bool:
 		"""Determines the success status of the test."""
-		if self.data.state.time > self.data.time_to_finish * 1e6:
+		if self.data.state.time > self.data.time_to_finish:
 			return False
 		if not self.data.state.dest_hit:
 			return False
@@ -291,7 +291,7 @@ class TestPage(QWidget):
 			*self.data.state.points[0],
 			self.data.state.time,
 			self.data.state.success_status,
-			int(self.data.state.time > self.data.time_to_finish * 1e6),
+			int(self.data.state.time > self.data.time_to_finish),
 			self.data.state.source_hit,
 			self.data.state.dest_hit,
 			*self.data.state.circles_hit,
