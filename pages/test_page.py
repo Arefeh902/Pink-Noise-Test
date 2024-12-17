@@ -151,10 +151,6 @@ class TestPage(QWidget):
 		"""Handles tablet input events."""
 		# threading.Thread(target=self.tablet_, args=(event, time.perf_counter_ns())).start()
 		current_time = time.perf_counter_ns()
-		if not self.start_time and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
-			self.tablet_connected = True
-			self.start_tracking()
-			
 		self.tablet_data = [
 			event.position().x(),
 			event.position().y(),
@@ -165,6 +161,10 @@ class TestPage(QWidget):
 			(current_time - self.start_time)/ 1e6
 		]
 		
+		if not self.start_time and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
+			self.tablet_connected = True
+			self.start_tracking()
+			
 
 	def tablet_(self, event, current_time):
 		if not self.start_time and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
