@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 from PyQt6.QtCore import Qt
 import sounddevice as sd
 import numpy as np
+import os
 
 ######################################################################################
 #                                                                                    #
@@ -96,7 +97,7 @@ def play_beep(frequency: float, duration: float):
 
 class TestPage(QWidget):
 	"""Handles a single test, managing input, drawing, and logic."""
-	def __init__(self, data: Data, target_dir: str, manager: PageManager):
+	def __init__(self, data: Data, target_dir: str, target_file_prefix: str, manager: PageManager):
 		super().__init__()
 		self.data = data
 		self.data.dimensions.WINDOW_HEIGHT_PIXELS -= 250
@@ -104,10 +105,10 @@ class TestPage(QWidget):
 		self.state = self.data.state
 		self.manager = manager
 		self.target_dir = target_dir
+		self.target_file_prefix = target_file_prefix
 		self.is_running = False
 
 		self.sampling_rate_ms = 1000 / self.data.rate
-		self.sampling_rate_ms = 5
 		self.read_queue = Queue(maxsize=10000)
 		self.tablet_data_times = []
 
@@ -302,7 +303,7 @@ class TestPage(QWidget):
 	def save_data(self):
 		print('saving data...')
 		"""Saves the test data to a CSV file."""
-		output_path = Path(self.target_dir) / f"{self.manager.test_number}.csv"
+		output_path = Path(self.target_dir) / f"{self.target_file_prefix}_{self.manager.test_number}.csv"
 		with output_path.open(mode="w", newline="") as file:
 			writer = csv.writer(file)
 			header, first_row = self.generate_header_and_first_row()
@@ -312,8 +313,8 @@ class TestPage(QWidget):
 		self.save_diffs()
 
 	def save_diffs(self):
-		output_path = Path(self.target_dir) / f"{self.manager.test_number}_diffs.txt"
-		output_time_path = Path(self.target_dir) / f"{self.manager.test_number}_tablet_times.txt"
+		output_path = Path(self.target_dir) / f"{self.target_file_prefix}_{self.manager.test_number}_diffs.txt"
+		# output_time_path = Path(self.target_dir) / f"{self.target_file_prefix}_{self.manager.test_number}_tablet_times.txt"
 		
 		with output_path.open(mode='w', newline='') as file:
 			for i in range(1, len(self.state.points)):
