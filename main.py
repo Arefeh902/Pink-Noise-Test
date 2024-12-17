@@ -30,6 +30,7 @@ class MainWindow(QMainWindow):
 	def create_manager(self):
 		input_file = 'input.csv'
 		self.folders = [os.path.join(self.input_dir, folder) for folder in os.listdir(self.input_dir) if os.path.isdir(os.path.join(self.input_dir, folder))]
+		self.folders = sorted(self.folders, key=lambda x: int(os.path.basename(x)))
 		print(self.folders)
 		create_input_file_from_excel(self.folders[self.folder_index], input_file)
 		self.folder_index += 1

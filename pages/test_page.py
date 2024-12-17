@@ -209,8 +209,8 @@ class TestPage(QWidget):
 				if self.tablet_connected:
 					data = self.tablet_data.copy()
 				else:
-					data = [None, None, None, None, None, None, None]
-
+					pos = self.mapFromGlobal(QCursor.pos())
+					data = [pos.x(), pos.y(), None, None, None, None, None]
 				elapsed_time = (current_time - self.start_time) / 1e6
 				self.read_queue.put((data, elapsed_time))
 
