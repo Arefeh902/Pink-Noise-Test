@@ -152,6 +152,7 @@ class TestPage(QWidget):
 		# threading.Thread(target=self.tablet_, args=(event, time.perf_counter_ns())).start()
 		current_time = time.perf_counter_ns()
 		if not self.start_time and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
+			self.tablet_connected = True
 			self.start_tracking()
 			
 		self.tablet_data = [
@@ -208,8 +209,7 @@ class TestPage(QWidget):
 				if self.tablet_connected:
 					data = self.tablet_data.copy()
 				else:
-					pos = self.mapFromGlobal(QCursor.pos())
-					data = [pos.x(), pos.y(), None, None, None, None, None]
+					data = [None, None, None, None, None, None, None]
 
 				elapsed_time = (current_time - self.start_time) / 1e6
 				self.read_queue.put((data, elapsed_time))
@@ -252,9 +252,9 @@ class TestPage(QWidget):
 		self.state.success_status = self.determine_status()
 
 		if self.reading_thread.is_alive():
-			self.reading_thread.join()  # Wait for reading thread to finish
+			self.reading_thread.join() 
 		if self.processing_thread.is_alive():
-			self.processing_thread.join() 
+			self.processing_thread.join()
 
 		self.path_color = SUCCESS_PATH_COLOR if self.state.success_status else FAILURE_PATH_COLOR
 		if self.state.success_status:
