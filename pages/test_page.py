@@ -221,11 +221,12 @@ class TestPage(QWidget):
 		while self.is_running:
 			if not self.read_queue.empty():
 				data, t = self.read_queue.get()
-				self.data.process_input_data(data, t)
-
 				x, y = data[0], data[1]
 				if self.check_end_test(x, y, t):
 					self.start_stop_thread(t)
+
+				self.data.process_input_data(data, t)
+
 		while not self.read_queue.empty():
 			data, t = self.read_queue.get()
 			self.data.process_input_data(data, t)
