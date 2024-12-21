@@ -100,8 +100,6 @@ class TestPage(QWidget):
 	def __init__(self, data: Data, target_dir: str, target_file_prefix: str, manager: PageManager):
 		super().__init__()
 		self.data = data
-		self.data.dimensions.WINDOW_HEIGHT_PIXELS -= 250
-		self.data.dimensions.WINDOW_WIDTH_PIXELS -= 250
 		self.state = self.data.state
 		self.manager = manager
 		self.target_dir = target_dir
@@ -118,7 +116,10 @@ class TestPage(QWidget):
 		self.path_color = FAILURE_PATH_COLOR
 		self.show_path_flag = False
 
-		self.setGeometry(0, 0, data.dimensions.WINDOW_WIDTH_PIXELS, data.dimensions.WINDOW_HEIGHT_PIXELS)
+		self.data.dimensions.WINDOW_HEIGHT_PIXELS -= 80
+		print(self.data.dimensions.WINDOW_WIDTH_CM, self.data.dimensions.WINDOW_HEIGHT_CM)
+		print(self.data.dimensions.WINDOW_WIDTH_PIXELS, self.data.dimensions.WINDOW_HEIGHT_PIXELS)
+		self.setFixedSize(self.data.dimensions.WINDOW_WIDTH_PIXELS, self.data.dimensions.WINDOW_HEIGHT_PIXELS)
 		self.setWindowTitle("Circles Display")
 		
 		self.init_ui()
