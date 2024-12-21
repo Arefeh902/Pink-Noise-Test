@@ -151,7 +151,7 @@ class TestPage(QWidget):
 	def tabletEvent(self, event: QTabletEvent):
 		"""Handles tablet input events."""
 		# threading.Thread(target=self.tablet_, args=(event, time.perf_counter_ns())).start()
-		current_time = time.perf_counter_ns()
+		# current_time = time.perf_counter_ns()
 		self.tablet_data = [
 			event.position().x(),
 			event.position().y(),
@@ -159,30 +159,13 @@ class TestPage(QWidget):
 			event.xTilt(),
 			event.yTilt(),
 			event.rotation(),
-			(current_time - self.start_time)/ 1e6
+			event.timestamp()
 		]
 		
 		if not self.start_time and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
 			self.tablet_connected = True
 			self.start_tracking()
 			
-
-	def tablet_(self, event, current_time):
-		if not self.start_time and event.type() == QEvent.Type.TabletPress and self.data.source_circle.check_hit(event.position().x(), event.position().y()):
-			self.start_tracking()
-
-		self.tablet_data = [
-			event.position().x(),
-			event.position().y(),
-			event.pressure(),
-			event.xTilt(),
-			event.yTilt(),
-			event.rotation(),
-			(current_time - self.start_time)/ 1e6
-		]
-		
-		# self.read_queue.put(self.tablet_data)
-	   
 
 	def mousePressEvent(self, event):
 		"""Handles mouse press events."""
@@ -238,7 +221,8 @@ class TestPage(QWidget):
 			return True
 		if self.data.state.dest_hit:
 			return True
-		if x - (dest.x + dest.rx) >= self.data.passing_offset * self.data.dimensions.X_CM_TO_PIXEL: 
+		if x - (dest.x + dest.rx) >= self.data.passing_offset * self.data.dimensions.X_CM_TO_PIXEL:
+			self.data.state.dest_passed = 1
 			return True
 		return False
 		
@@ -285,7 +269,7 @@ class TestPage(QWidget):
 
 	def generate_header_and_first_row(self):
 		"""Generates the header and first row for the CSV file."""
-		header = ['x', 'y', 'pressure', 'x_tilt', 'y_tilt', 'rotation', 'tablet_time', 'time', 'tota_time', 'success', 'timeout', 'source_hit', 'dest_hit']
+		header = ['x', 'y', 'pressure', 'x_tilt', 'y_tilt', 'rotation', 'tablet_time', 'time', 'total_time', 'success', 'timeout', 'dest_passed', 'source_hit', 'dest_hit']
 		header += [f"circle_{i + 1}_hit" for i in range(len(self.data.state.circles_hit))]
 		header += [f"rect_{i + 1}_hit" for i in range(len(self.data.state.rects_hit))]
 
@@ -294,6 +278,7 @@ class TestPage(QWidget):
 			self.data.state.time,
 			self.data.state.success_status,
 			int(self.data.state.time > self.data.time_to_finish),
+			self.data.state.dest_passed,
 			self.data.state.source_hit,
 			self.data.state.dest_hit,
 			*self.data.state.circles_hit,

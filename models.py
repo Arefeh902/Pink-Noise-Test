@@ -130,6 +130,7 @@ class State:
         
         self.time = None
         self.points = []
+        self.dest_passed = 0
         self.success_status = 0
 
 
