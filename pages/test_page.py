@@ -272,6 +272,7 @@ class TestPage(QWidget):
 		header = ['x', 'y', 'pressure', 'x_tilt', 'y_tilt', 'rotation', 'tablet_time', 'time', 'total_time', 'success', 'timeout', 'dest_passed', 'source_hit', 'dest_hit']
 		header += [f"circle_{i + 1}_hit" for i in range(len(self.data.state.circles_hit))]
 		header += [f"rect_{i + 1}_hit" for i in range(len(self.data.state.rects_hit))]
+		header += [f'distance of last point from center of dest']
 
 		first_row = [
 			*self.data.state.points[0],
@@ -282,7 +283,8 @@ class TestPage(QWidget):
 			self.data.state.source_hit,
 			self.data.state.dest_hit,
 			*self.data.state.circles_hit,
-			*self.data.state.rects_hit
+			*self.data.state.rects_hit,
+			self.data.dest_circle.calc_dist_to_center(self.data, self.data.state.points[-1][0], self.data.state.points[-1][1])
 		]
 		return header, first_row
 

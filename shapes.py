@@ -45,6 +45,10 @@ class Circle:
         distance = sqrt((self.x - input_x) ** 2 + (self.y - input_y) ** 2)
         return distance <= max(self.rx, self.ry)
 
+    def calc_dist_to_center(self, data, x, y):
+        x, y = data.reverse_process_x_and_y_for_drawing(x, y)
+        return sqrt(((self.x-x)*data.dimensions.X_PIXEL_TO_CM)**2 + ((self.y-y)*data.dimensions.Y_PIXEL_TO_CM)**2) 
+
     def __str__(self) -> str:
         """
         String representation of the circle.
