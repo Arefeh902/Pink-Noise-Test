@@ -116,7 +116,8 @@ class TestPage(QWidget):
 		self.path_color = FAILURE_PATH_COLOR
 		self.show_path_flag = False
 
-		self.data.dimensions.WINDOW_HEIGHT_PIXELS -= 80
+		self.data.dimensions.WINDOW_HEIGHT_PIXELS -= 75
+		self.data.dimensions.WINDOW_HEIGHT_CM = self.data.dimensions.WINDOW_HEIGHT_PIXELS * self.data.dimensions.Y_PIXEL_TO_CM
 		print(self.data.dimensions.WINDOW_WIDTH_CM, self.data.dimensions.WINDOW_HEIGHT_CM)
 		print(self.data.dimensions.WINDOW_WIDTH_PIXELS, self.data.dimensions.WINDOW_HEIGHT_PIXELS)
 		self.setFixedSize(self.data.dimensions.WINDOW_WIDTH_PIXELS, self.data.dimensions.WINDOW_HEIGHT_PIXELS)
