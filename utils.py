@@ -80,3 +80,20 @@ def create_input_file_from_excel(directory: str, output_file: str):
 
 # Example usage
 # create_input_file_from_excel("./data/", "input_file.csv")
+
+def create_type_folders_in_data_directory(folder_list, data_dircetory, number_of_inside_folders=1):
+    if not os.path.exists(data_dircetory):
+        raise FileNotFoundError(f"The directory '{data_dircetory}' does not exist.")
+    
+    for folder in folder_list:
+        folder_path = os.path.join(data_dircetory, folder)
+        try:
+            os.makedirs(folder_path, exist_ok=True)
+            for i in range(1, number_of_inside_folders+1):
+                os.makedirs(os.path.join(folder_path, str(i)), exist_ok=True)
+        except Exception as e:
+            print(f"Error creating folder '{folder_path}': {e}")
+    
+
+# from config import FORM_OPTIONS_TYPES, DATA_DIRECTORY
+# create_type_folders_in_data_directory(FORM_OPTIONS_TYPES, DATA_DIRECTORY, 6)
