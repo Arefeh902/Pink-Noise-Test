@@ -5,6 +5,7 @@ OUTPUT_DIR = './test_results/'
 INPUT_DATA_FILE_NAME = "data.xlsx"
 INPUT_CIRCLES_FILE_NAME = "circles.xlsx"
 INPUT_RECTS_FILE_NAME = "rects.xlsx"
+DATA_DIRECTORY =  "data"
 
 # Origin x and y
 ORIGIN_X = 20                          # cm

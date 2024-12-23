@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (
 	QRadioButton, QTextEdit, QPushButton, QVBoxLayout, QHBoxLayout, QGroupBox, QButtonGroup, QSpacerItem, QSizePolicy
 )
 from PyQt6.QtCore import pyqtSignal
-from config import FORM_OPTIONS_TYPES
+from config import FORM_OPTIONS_TYPES, DATA_DIRECTORY
 
 ######################################################################################
 #                                                                                    #
@@ -162,5 +162,5 @@ class FormPage(QWidget):
 			file.write("\n".join(lines))
 
 		# call the function for reading input files and stuff!
-		self.main_window.input_dir = f'data/{test_type}'
+		self.main_window.input_dir = f'{DATA_DIRECTORY}/{test_type}'
 		self.form_submitted.emit()
