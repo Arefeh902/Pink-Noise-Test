@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QApplication
 from config import OFFSET_FROM_DEST_CM, SOURCE_CIRCLE_COLOR, DESTINATION_CIRCLE_COLOR, MIDDLE_CIRCLE_COLOR
 from shapes import Circle, Rectangle
+from config import ORIGIN_X, ORIGIN_Y
 
 class TesterInformation:
     def __init__(self, name, lastname, phone_number, age, dominant_hand, vision, test_type, additional_info):
@@ -62,13 +63,17 @@ class Data:
         self.state = State(self)
     
     def process_x_and_y(self, x, y):
-        y = self.dimensions.WINDOW_HEIGHT_PIXELS // 2 - y
-        x = self.dimensions.WINDOW_WIDTH_PIXELS // 2 + x
+        y = (self.dimensions.WINDOW_HEIGHT_CM - ORIGIN_Y)*self.dimensions.Y_CM_TO_PIXEL - y
+        x = ORIGIN_X * self.dimensions.X_CM_TO_PIXEL + x
+        return x, y
+
+    def reverse_process_x_and_y(self, x, y):
+        y = (self.dimensions.WINDOW_HEIGHT_CM - ORIGIN_Y)*self.dimensions.Y_CM_TO_PIXEL - y
+        x = - (ORIGIN_X * self.dimensions.X_CM_TO_PIXEL) + x
         return x, y
 
     def process_x_and_y_for_record(self, x, y):
-        y = self.dimensions.WINDOW_HEIGHT_PIXELS // 2 - y 
-        x = x - self.dimensions.WINDOW_WIDTH_PIXELS // 2 
+        x, y = self.reverse_process_x_and_y(x, y)
         x *= self.dimensions.X_PIXEL_TO_CM * 10
         y *= self.dimensions.Y_PIXEL_TO_CM * 10
         return x, y
@@ -76,8 +81,7 @@ class Data:
     def reverse_process_x_and_y_for_drawing(self, x, y):
         x *= self.dimensions.X_CM_TO_PIXEL / 10
         y *= self.dimensions.Y_CM_TO_PIXEL / 10
-        y = self.dimensions.WINDOW_HEIGHT_PIXELS // 2 - y
-        x = self.dimensions.WINDOW_WIDTH_PIXELS // 2 + x
+        x, y = self.process_x_and_y(x, y)
         return x, y
 
     def process_input_circle_data(self, circle, color):

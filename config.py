@@ -6,6 +6,10 @@ INPUT_DATA_FILE_NAME = "data.xlsx"
 INPUT_CIRCLES_FILE_NAME = "circles.xlsx"
 INPUT_RECTS_FILE_NAME = "rects.xlsx"
 
+# Origin x and y
+ORIGIN_X = 20                          # cm
+ORIGIN_Y = 8.84                        # cm
+
 # Test Parameters
 DELAY_BETWEEN_TESTS = 1500             # ms
 INDEX_OF_START_TEST = 0                # Test to start from
