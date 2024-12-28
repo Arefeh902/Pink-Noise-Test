@@ -11,7 +11,7 @@ class RestPage(QWidget):
         layout = QVBoxLayout()
 
         # Label
-        label = QLabel("Rest up for 10 mins")
+        label = QLabel("Rest up")
         label.setStyleSheet("font-size: 24px; font-weight: bold; text-align: center;")
         layout.addWidget(label)
 
