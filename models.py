@@ -50,8 +50,11 @@ class ScreenDimensions:
 
 
 class Data:
-    def __init__(self, time_to_finish, rate, source, dest, circles, rects, passing_offset=OFFSET_FROM_DEST_CM):
+    def __init__(self, time_to_finish, rate, source, dest, circles, rects, y_offset_change_pixels=75, passing_offset=OFFSET_FROM_DEST_CM):
         self.dimensions = ScreenDimensions(QApplication.instance())
+        self.dimensions.WINDOW_HEIGHT_PIXELS -= y_offset_change_pixels
+        self.dimensions.WINDOW_HEIGHT_CM = self.dimensions.WINDOW_HEIGHT_PIXELS * self.dimensions.Y_PIXEL_TO_CM
+        
         self.source_circle = self.process_input_circle_data(source, SOURCE_CIRCLE_COLOR)
         self.dest_circle = self.process_input_circle_data(dest, DESTINATION_CIRCLE_COLOR)
         self.middle_circles = [self.process_input_circle_data(circle, MIDDLE_CIRCLE_COLOR) for circle in circles]
@@ -63,7 +66,7 @@ class Data:
         self.state = State(self)
     
     def process_x_and_y(self, x, y):
-        y = (self.dimensions.WINDOW_HEIGHT_CM - ORIGIN_Y)*self.dimensions.Y_CM_TO_PIXEL - y
+        y = (self.dimensions.WINDOW_HEIGHT_PIXELS - ORIGIN_Y*self.dimensions.Y_CM_TO_PIXEL) - y
         x = ORIGIN_X * self.dimensions.X_CM_TO_PIXEL + x
         return x, y
 
@@ -112,9 +115,13 @@ class Data:
         # check collusions
         self.state.source_hit |= self.source_circle.check_hit(x, y)
         self.state.dest_hit |= self.dest_circle.check_hit(x, y)
+        if not self.state.dest_hit and len(self.state.points) > 0:
+            self.dest_circle.check_hit_line_segment(x, y, *self.state.points[-1][:2])
         
         for i in range(len(self.middle_circles)):
             self.state.circles_hit[i] |= self.middle_circles[i].check_hit(x, y)
+            if not self.state.circles_hit[i] and len(self.state.points) > 0:
+                self.middle_circles[i].check_hit_line_segment(x, y, *self.state.points[-1][:2])
 
         for i in range(len(self.rects)):
             rx, ry, rw, rh = self.rects[i].x, self.rects[i].y, self.rects[i].w, self.rects[i].h

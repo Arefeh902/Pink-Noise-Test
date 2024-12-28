@@ -70,7 +70,7 @@ class PageManager(QObject):
 			for i in range(index + 1, index + 1 + num_rectangles * 6, 6)
 		]
 
-		return Data(time, rate, source_circle, dest_circle, middle_circles, rectangles)
+		return Data(time, rate, source_circle, dest_circle, middle_circles, rectangles, 75)
 
 	def start_tests(self):
 		"""Starts the test sequence."""
@@ -116,10 +116,6 @@ class TestPage(QWidget):
 		self.path_color = FAILURE_PATH_COLOR
 		self.show_path_flag = False
 
-		self.data.dimensions.WINDOW_HEIGHT_PIXELS -= 75
-		self.data.dimensions.WINDOW_HEIGHT_CM = self.data.dimensions.WINDOW_HEIGHT_PIXELS * self.data.dimensions.Y_PIXEL_TO_CM
-		print(self.data.dimensions.WINDOW_WIDTH_CM, self.data.dimensions.WINDOW_HEIGHT_CM)
-		print(self.data.dimensions.WINDOW_WIDTH_PIXELS, self.data.dimensions.WINDOW_HEIGHT_PIXELS)
 		self.setFixedSize(self.data.dimensions.WINDOW_WIDTH_PIXELS, self.data.dimensions.WINDOW_HEIGHT_PIXELS)
 		self.setWindowTitle("Circles Display")
 		
