@@ -5,10 +5,10 @@ OUTPUT_DIR = './test_results/'
 INPUT_DATA_FILE_NAME = "data.xlsx"
 INPUT_CIRCLES_FILE_NAME = "circles.xlsx"
 INPUT_RECTS_FILE_NAME = "rects.xlsx"
-DATA_DIRECTORY =  "pilot_data"
+DATA_DIRECTORY =  "data"
 
 # Origin x and y
-ORIGIN_X = 20                          # cm
+ORIGIN_X = 25                          # cm
 ORIGIN_Y = 8.84                        # cm
 
 # Test Parameters
@@ -17,8 +17,8 @@ INDEX_OF_START_TEST = 0                # Test to start from
 OFFSET_FROM_DEST_CM = 1
 
 # Form Params
-# FORM_OPTIONS_TYPES = ['C1', 'C2', 'P1', 'P2','PR1', 'PR2', 'W1', 'W2', 'WR1', 'WR2', 'Pre-Test', 'Post-Test', 'Transfer']
-FORM_OPTIONS_TYPES = [str(i) for i in range(1, 37)]
+FORM_OPTIONS_TYPES = ['C1', 'C2', 'P1', 'P2','PR1', 'PR2', 'W1', 'W2', 'WR1', 'WR2', 'Pre-Test', 'Post-Test', 'Transfer']
+# FORM_OPTIONS_TYPES = [str(i) for i in range(1, 37)]
 
 # Visual Parameters
 SOURCE_CIRCLE_COLOR      = (120, 245, 66)       
