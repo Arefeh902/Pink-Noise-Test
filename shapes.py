@@ -15,10 +15,14 @@ class Circle:
             ry (float): The radius of the circle along the y-axis.
             color: The color of the circle (default: MIDDLE_CIRCLE_COLOR).
         """
-        self.x = int(x)
-        self.y = int(y)
-        self.rx = int(rx)
-        self.ry = int(ry)
+        self.x = x
+        self.y = y
+        self.rx = rx
+        self.ry = ry        
+        # self.x = int(x)
+        # self.y = int(y)
+        # self.rx = int(rx)
+        # self.ry = int(ry)
         self.color = color
 
     def draw(self, painter: QPainter) -> None:
@@ -43,8 +47,34 @@ class Circle:
             bool: True if the point is within the circle, False otherwise.
         """
         distance = sqrt((self.x - input_x) ** 2 + (self.y - input_y) ** 2)
-        return distance <= max(self.rx, self.ry)
+        return distance <= max(self.rx, self.ry) 
 
+    def check_hit_line_segment(self, x1, y1, x2, y2):
+        xc, yc, a, b = self.x, self.y, self.rx, self.ry
+
+        # Line segment vector
+        dx = x2 - x1
+        dy = y2 - y1
+
+        # Quadratic coefficients
+        A = (dx**2) / a**2 + (dy**2) / b**2
+        B = 2 * ((dx * (x1 - xc)) / a**2 + (dy * (y1 - yc)) / b**2)
+        C = ((x1 - xc)**2) / a**2 + ((y1 - yc)**2) / b**2 - 1
+
+        # Discriminant
+        discriminant = B**2 - 4 * A * C
+
+        if discriminant < 0:
+            return False  # No intersection
+
+        # Solve for t values
+        sqrt_discriminant = sqrt(discriminant)
+        t1 = (-B + sqrt_discriminant) / (2 * A)
+        t2 = (-B - sqrt_discriminant) / (2 * A)
+
+        # Check if t1 or t2 is in [0, 1]
+        return 0 <= t1 <= 1 or 0 <= t2 <= 1    
+    
     def calc_dist_to_center(self, data, x, y):
         x, y = data.reverse_process_x_and_y_for_drawing(x, y)
         return sqrt(((self.x-x)*data.dimensions.X_PIXEL_TO_CM)**2 + ((self.y-y)*data.dimensions.Y_PIXEL_TO_CM)**2) 
@@ -84,6 +114,9 @@ class Rectangle:
         """
         painter.setBrush(QColor(*self.color))
         painter.drawRect(int(self.x), int(self.y), int(self.w), int(self.h))
+
+    def check_hit_line_segment(self, x1, y1, x2, y2):
+        pass
 
     def update_pos(self, dimensions) -> None:
         """
