@@ -296,20 +296,6 @@ class TestPage(QWidget):
 			writer.writerow(header)
 			writer.writerow(first_row)
 			writer.writerows(self.data.state.points[1:])
-		self.save_diffs()
-
-	def save_diffs(self):
-		output_path = Path(self.target_dir) / f"{self.target_file_prefix}_{self.manager.test_number}_diffs.txt"
-		# output_time_path = Path(self.target_dir) / f"{self.target_file_prefix}_{self.manager.test_number}_tablet_times.txt"
-		
-		with output_path.open(mode='w', newline='') as file:
-			for i in range(1, len(self.state.points)):
-				file.write(f"{self.state.points[i][-1] - self.state.points[i-1][-1]}\n")
-		
-		# with output_time_path.open(mode='w', newline='') as file:
-		# 	for i in range(len(self.tablet_data_times)):
-		# 		file.write(f"{self.tablet_data_times[i]}\n")
-
 
 	def paintEvent(self, event):
 		"""Handles custom painting of the test elements."""
