@@ -98,15 +98,13 @@ class Data:
 
 
     def process_input_rect_data(self, rect):
-        x, y, w, h, dx, dy = rect
+        x, y, w, h = rect
         x *= self.dimensions.X_CM_TO_PIXEL
         y *= self.dimensions.Y_CM_TO_PIXEL
         x, y = self.process_x_and_y(x, y)
         w *= self.dimensions.X_CM_TO_PIXEL
         h *= self.dimensions.Y_CM_TO_PIXEL
-        dx *= self.dimensions.X_CM_TO_PIXEL
-        dy *= self.dimensions.Y_CM_TO_PIXEL
-        return Rectangle(x, y, w, h, dx, dy)
+        return Rectangle(x, y, w, h)
 
 
     def process_input_data(self, tablet_data, t):
@@ -115,18 +113,18 @@ class Data:
         # check collusions
         self.state.source_hit |= self.source_circle.check_hit(x, y)
         self.state.dest_hit |= self.dest_circle.check_hit(x, y)
-        if not self.state.dest_hit and len(self.state.points) > 0:
+        if not self.state.dest_hit and len(self.state.points) > 1:
             self.dest_circle.check_hit_line_segment(x, y, *self.state.points[-1][:2])
         
         for i in range(len(self.middle_circles)):
             self.state.circles_hit[i] |= self.middle_circles[i].check_hit(x, y)
-            if not self.state.circles_hit[i] and len(self.state.points) > 0:
-                self.middle_circles[i].check_hit_line_segment(x, y, *self.state.points[-1][:2])
+            if not self.state.circles_hit[i] and len(self.state.points) > 1:
+                self.state.circles_hit[i] |= self.middle_circles[i].check_hit_line_segment(x, y, *self.state.points[-1][:2])
 
         for i in range(len(self.rects)):
-            rx, ry, rw, rh = self.rects[i].x, self.rects[i].y, self.rects[i].w, self.rects[i].h
-            if x <= rx+rw and x >= rx and y <= ry+rh and y >= ry:
-                self.state.rects_hit[i] = 1 
+            self.state.rects_hit[i] |= self.rects[i].check_hit(x, y) 
+            if not self.state.rects_hit[i] and len(self.state.points) > 1:
+                self.state.rects_hit[i] |= self.rects[i].check_hit_line_segments(x, y, *self.state.points[-1][:2])
 
         tablet_data[0], tablet_data[1] = self.process_x_and_y_for_record(x, y)
         self.state.points.append((*tablet_data, t))

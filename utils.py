@@ -28,7 +28,6 @@ def create_input_file_from_excel(directory: str, output_file: str):
     
     circle_data_size = 3
     rect_data_size = 4
-    max_rectangles = 4
 
     for gen_row, circle_row, rect_row in zip(
         general_test_data.itertuples(index=False), 
@@ -64,15 +63,8 @@ def create_input_file_from_excel(directory: str, output_file: str):
         ]
         output_data.append(combined_row)
 
-    # Define the output DataFrame structure
-    columns = (
-        [f"middle_circle_{i}_{attr}" for i in range(1, num_middle_circles + 1) for attr in ["x", "y", "radius"]]
-        + ["num_rectangles"]
-        + [f"rect_{i}_{attr}" for i in range(1, max_rectangles + 1) for attr in ["x", "y", "width", "height"]]
-    )
-
     # Save the output DataFrame to a CSV file
-    output_df = pd.DataFrame(output_data, columns=columns[:len(output_data[0])])  # Adjust for column size
+    output_df = pd.DataFrame(output_data)  # Adjust for column size
     output_df.to_csv(output_file, index=False, header=None)
 
     print(f"Input file created at: {output_file}")

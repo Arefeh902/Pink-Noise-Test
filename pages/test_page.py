@@ -52,6 +52,7 @@ class PageManager(QObject):
 		data = [float(x) for x in row]
 		time, rate = int(data[0]), int(data[1])
 		circle_size = 3
+		rectangle_size = 4
 
 		source_circle = tuple(data[2:2 + circle_size])
 		dest_circle = tuple(data[2 + circle_size:2 + 2 * circle_size])
@@ -66,8 +67,8 @@ class PageManager(QObject):
 		index += 1 + num_middle_circles * circle_size
 		num_rectangles = int(data[index])
 		rectangles = [
-			tuple(data[i:i + 6])
-			for i in range(index + 1, index + 1 + num_rectangles * 6, 6)
+			tuple(data[i:i + rectangle_size])
+			for i in range(index + 1, index + 1 + num_rectangles * rectangle_size, rectangle_size)
 		]
 
 		return Data(time, rate, source_circle, dest_circle, middle_circles, rectangles, 75)

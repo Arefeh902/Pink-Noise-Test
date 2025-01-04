@@ -87,7 +87,7 @@ class Circle:
 
 
 class Rectangle:
-    def __init__(self, x: float, y: float, w: float, h: float, dx: float, dy: float, color=RECT_COLOR):
+    def __init__(self, x: float, y: float, w: float, h: float, color=RECT_COLOR):
         """
         A class representing a rectangle.
 
@@ -104,8 +104,6 @@ class Rectangle:
         self.y = y
         self.w = w
         self.h = h
-        self.dx = int(dx)
-        self.dy = int(dy)
         self.color = color
 
     def draw(self, painter: QPainter) -> None:
@@ -115,23 +113,32 @@ class Rectangle:
         painter.setBrush(QColor(*self.color))
         painter.drawRect(int(self.x), int(self.y), int(self.w), int(self.h))
 
-    def check_hit_line_segment(self, x1, y1, x2, y2):
-        pass
+    def check_hit(self, x, y):
+        return self.x <= x and x <= self.x + self.w and self.y <= y and y <= self.y + self.h
 
-    def update_pos(self, dimensions) -> None:
-        """
-        Updates the rectangle's position, reversing direction if it hits vertical boundaries.
+    def check_hit_line_segment(self, x1, y1, x2, y2, x3, y3, x4, y4):
+        """Helper function to check if two line segments intersect."""
+        def orientation(xa, ya, xb, yb, xc, yc):
+            val = (yb - ya) * (xc - xb) - (xb - xa) * (yc - yb)
+            if val == 0:
+                return 0  # Collinear
+            return 1 if val > 0 else 2  # Clockwise or counterclockwise
 
-        Args:
-            dimensions: An object with WINDOW_HEIGHT_PIXELS attribute defining screen dimensions.
-        """
-        self.x += self.dx
-        self.y += self.dy
+        o1 = orientation(x1, y1, x2, y2, x3, y3)
+        o2 = orientation(x1, y1, x2, y2, x4, y4)
+        o3 = orientation(x3, y3, x4, y4, x1, y1)
+        o4 = orientation(x3, y3, x4, y4, x2, y2)
 
-        # Reverse direction if hitting vertical boundaries
-        if self.y + self.h >= dimensions.WINDOW_HEIGHT_PIXELS:
-            self.dy *= -1
-            self.y = dimensions.WINDOW_HEIGHT_PIXELS - self.h
-        elif self.y <= 0:
-            self.dy *= -1
-            self.y = 0
+        # General case
+        if o1 != o2 and o3 != o4:
+            return 1
+        return 0
+
+    def check_hit_line_segments(self, x1, y1, x2, y2):
+        x, y = self.x, self.y
+        tmp = 0
+        tmp |= self.check_hit_line_segment(x1, y1, x2, y2, x, y, x+self.w, y)
+        tmp |= self.check_hit_line_segment(x1, y1, x2, y2, x, y, x, y+self.h)
+        tmp |= self.check_hit_line_segment(x1, y1, x2, y2, x+self.w, y, x+self.w, y+self.h)
+        tmp |= self.check_hit_line_segment(x1, y1, x2, y2, x, y+self.h, x+self.w, y+self.h)
+        return tmp
