@@ -11,7 +11,7 @@ from config import (
 	BACKGROUND_COLOR, SOURCE_CIRCLE_COLOR, DESTINATION_CIRCLE_COLOR, RECT_COLOR,
 	SUCCESS_PATH_COLOR, FAILURE_PATH_COLOR, START_FREQUENCY, START_DURATION_MS,
 	SUCCESS_FREQUENCY, SUCCESS_DURATION_MS, FAILURE_FREQUENCY, FAILURE_DURATION_MS, 
-	DELAY_BETWEEN_TESTS
+	DELAY_BETWEEN_TESTS, MAX_NUM_OF_ADDITIONAL_RCORDED_POINTS
 )
 from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 from PyQt6.QtCore import Qt
@@ -209,9 +209,11 @@ class TestPage(QWidget):
 
 				self.data.process_input_data(data, t)
 
-		while not self.read_queue.empty():
+		count = MAX_NUM_OF_ADDITIONAL_RCORDED_POINTS
+		while not self.read_queue.empty() and count > 0:
 			data, t = self.read_queue.get()
 			self.data.process_input_data(data, t)
+			count -= 1
 
 	def check_end_test(self, x, y, t) -> bool:
 		"""Checks if the test should end based on input conditions."""
