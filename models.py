@@ -81,7 +81,7 @@ class Data:
         y *= self.dimensions.Y_PIXEL_TO_CM * 10
         return x, y
 
-    def reverse_process_x_and_y_for_drawing(self, x, y):
+    def reverse_process_x_and_y_for_record(self, x, y):
         x *= self.dimensions.X_CM_TO_PIXEL / 10
         y *= self.dimensions.Y_CM_TO_PIXEL / 10
         x, y = self.process_x_and_y(x, y)
@@ -119,12 +119,13 @@ class Data:
         for i in range(len(self.middle_circles)):
             self.state.circles_hit[i] |= self.middle_circles[i].check_hit(x, y)
             if not self.state.circles_hit[i] and len(self.state.points) > 1:
-                self.state.circles_hit[i] |= self.middle_circles[i].check_hit_line_segment(x, y, *self.state.points[-1][:2])
+                self.state.circles_hit[i] |= self.middle_circles[i].check_hit_line_segment(x, y, *self.reverse_process_x_and_y_for_record(*self.state.points[-1][:2]))
 
         for i in range(len(self.rects)):
             self.state.rects_hit[i] |= self.rects[i].check_hit(x, y) 
             if not self.state.rects_hit[i] and len(self.state.points) > 1:
-                self.state.rects_hit[i] |= self.rects[i].check_hit_line_segments(x, y, *self.state.points[-1][:2])
+                self.state.rects_hit[i] |= self.rects[i].check_hit_line_segments(x, y, *self.reverse_process_x_and_y_for_record(*self.state.points[-1][:2]))
+                pass
 
         tablet_data[0], tablet_data[1] = self.process_x_and_y_for_record(x, y)
         self.state.points.append((*tablet_data, t))

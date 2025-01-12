@@ -323,9 +323,9 @@ class TestPage(QWidget):
 				if self.data.state.points[i+1][-1] > self.data.state.time:
 					break
 				x1, y1 = self.data.state.points[i][:2]
-				x1, y1 = self.data.reverse_process_x_and_y_for_drawing(x1, y1) 
+				x1, y1 = self.data.reverse_process_x_and_y_for_record(x1, y1) 
 				x2, y2 = self.data.state.points[i+1][:2]
-				x2, y2 = self.data.reverse_process_x_and_y_for_drawing(x2, y2) 
+				x2, y2 = self.data.reverse_process_x_and_y_for_record(x2, y2) 
 				painter.drawLine(
 					int(x1), int(y1),
 					int(x2), int(y2)
