@@ -276,7 +276,7 @@ class TestPage(QWidget):
 		first_row = [
 			*self.data.state.points[0],
 			self.data.state.time,
-			self.data.state.success_status,
+			int(self.data.state.success_status),
 			int(self.data.state.time > self.data.time_to_finish),
 			self.data.state.dest_passed,
 			self.data.state.source_hit,
