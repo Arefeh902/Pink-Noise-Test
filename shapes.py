@@ -50,6 +50,8 @@ class Circle:
         return distance <= max(self.rx, self.ry) 
 
     def check_hit_line_segment(self, x1, y1, x2, y2):
+        if x1 == x2 and y1 == y2:
+            return 0
         xc, yc, a, b = self.x, self.y, self.rx, self.ry
 
         # Line segment vector
@@ -135,6 +137,8 @@ class Rectangle:
         return 0
 
     def check_hit_line_segments(self, x1, y1, x2, y2):
+        if x1 == x2 and y1 == y2:
+            return 0
         x, y = self.x, self.y
         tmp = 0
         tmp |= self.check_hit_line_segment(x1, y1, x2, y2, x, y, x+self.w, y)
